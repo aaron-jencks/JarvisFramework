@@ -6,12 +6,12 @@
 
     <StackLayout>
         <!-- Place new controls here -->
-        <Label AutomationId="titleLabel"
+        <Label x:Name="titleLabel"
                Text="Jarvis Says Hello"
                XAlign="Center" />
-        <Entry AutomationId="commandBar"
+        <Entry x:Name="commandBar"
                Placeholder="Enter Commands Here..." />
-        <Label AutomationId="consoleOutput"
+        <Label x:Name="consoleOutput"
                Text="Hello World!"
                XAlign="Start" />
     </StackLayout>
