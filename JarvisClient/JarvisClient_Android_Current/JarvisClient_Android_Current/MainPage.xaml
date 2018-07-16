@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:JarvisClient_Android_Current"
+             x:Class="JarvisClient_Android_Current.MainPage">
+
+    <StackLayout>
+        <!-- Place new controls here -->
+        <Label AutomationId="titleLabel"
+               Text="Jarvis Says Hello"
+               XAlign="Center" />
+        <Entry AutomationId="commandBar"
+               Placeholder="Enter Commands Here..." />
+        <Label AutomationId="consoleOutput"
+               Text="Hello World!"
+               XAlign="Start" />
+    </StackLayout>
+
+</ContentPage>
