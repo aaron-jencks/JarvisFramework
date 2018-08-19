@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:JarvisClientCurrent"
+             x:Class="JarvisClientCurrent.MainPage">
+
+    <StackLayout>
+        <!-- Place new controls here -->
+        <Entry x:Name="commandBar"
+               Keyboard="Text"
+               ReturnType="Go"
+               VerticalOptions="Start" />
+        <Label x:Name="consoleOutput"
+               Text="Hello World!" />
+    </StackLayout>
+
+</ContentPage>

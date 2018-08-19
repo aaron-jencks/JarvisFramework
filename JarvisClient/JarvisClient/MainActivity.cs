@@ -5,6 +5,9 @@ using Android.OS;
 using Android.Support.Design.Widget;
 using Android.Support.V7.App;
 using Android.Views;
+using ModuleFramework;
+using System.Collections.Generic;
+using JarvisClientFramework;
 
 namespace JarvisClient
 {
@@ -13,14 +16,22 @@ namespace JarvisClient
 	{
         #region Properties
 
-        private EditText consoleOutput;
+        private EditText CommandBar;
         private TextView titleLabel;
+        private TextView consoleOutput;
+
+        private ConsoleModule ConsoleClient;
+        private ModuleServer ClientServer;
+        private NetworkingTCPClient TCPClient;
+        private Queue<CommPacket> CommQueue = new Queue<CommPacket>(10);
 
         #endregion
 
         protected override void OnCreate(Bundle savedInstanceState)
 		{
-			base.OnCreate(savedInstanceState);
+            #region Android Stuff
+
+            base.OnCreate(savedInstanceState);
 
 			SetContentView(Resource.Layout.activity_main);
 
@@ -30,11 +41,52 @@ namespace JarvisClient
 			FloatingActionButton fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
             fab.Click += FabOnClick;
 
-            consoleOutput = FindViewById<EditText>(Resource.Id.consoleOutput);
-            titleLabel = FindViewById<TextView>(Resource.Id.titleLabel);
-		}
+            #endregion
 
-		public override bool OnCreateOptionsMenu(IMenu menu)
+            consoleOutput = FindViewById<TextView>(Resource.Id.ConsoleOutput);
+            titleLabel = FindViewById<TextView>(Resource.Id.titleLabel);
+            CommandBar = FindViewById<EditText>(Resource.Id.CommandBar);
+
+            // Sets up the base console system
+            ClientServer = new ModuleServer(ref CommQueue);
+            int id = ClientServer.ID;
+            ConsoleClient = new ConsoleModule(ref CommQueue);
+            id = ConsoleClient.ID;
+            ConsoleClient.ConsolePostEvent += ConsoleClient_MessageRxEvent;
+            ClientServer.Subscribe(ConsoleClient);
+
+            // Sets up the networking and port system
+            TCPClient = new NetworkingTCPClient(ref CommQueue);
+            ClientServer.Subscribe(TCPClient);
+
+            CommandBar.KeyPress += (object sender, View.KeyEventArgs e) => {
+                e.Handled = false;
+                if (e.Event.Action == KeyEventActions.Down && e.KeyCode == Keycode.Enter)
+                {
+                    Toast.MakeText(this, "Message Transmitting!", ToastLength.Short).Show();
+                    e.Handled = true;
+
+                    ClientServer.SendMessage("Post", new ConsolePostEventArgs("Command: " + CommandBar.Text), ConsoleClient.ID);   // Updates the console
+                    ClientServer.SendMessage(CommandBar.Text);   // Sends the command
+                    CommandBar.Text = "";
+                }
+            };
+        }
+
+        private void ConsoleClient_MessageRxEvent(object sender, ConsolePostEventArgs e)
+        {
+            RunOnUiThread(() =>
+            {
+                if (e.Append)
+                    consoleOutput.Append(e.Message + ((e.Newline) ? "\n" : ""));
+                else
+                    consoleOutput.Text = e.Message + ((e.Newline) ? "\n" : "");
+            });
+        }
+
+        #region Android stuff
+
+        public override bool OnCreateOptionsMenu(IMenu menu)
         {
             MenuInflater.Inflate(Resource.Menu.menu_main, menu);
             return true;
@@ -57,6 +109,8 @@ namespace JarvisClient
             Snackbar.Make(view, "Replace with your own action", Snackbar.LengthLong)
                 .SetAction("Action", (Android.Views.View.IOnClickListener)null).Show();
         }
-	}
+
+        #endregion
+    }
 }
 
