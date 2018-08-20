@@ -136,12 +136,21 @@ namespace JarvisClientFramework
         protected override void Module_MessageRxEvent(object sender, MessageRxEventArgs e)
         {
             base.Module_MessageRxEvent(sender, e);
+            List<string> arguments = (List<string>)e.Packet.Data;
             switch(e.Packet.Command)
             {
                 case "Connect":
                     Task.Factory.StartNew(() => {
-                        ConnectionData d = (ConnectionData)e.Packet.Data;
-                        Connect(d.IP, d.Port);
+                        if (arguments.Count < 2)
+                        {
+                            SendMessage("Post", new List<string>() { "Invalid number of arguments" });
+                            SendMessage("Post", new List<string>() { "Usage is: Connect {IPAddress} {Port}" });
+                        }
+                        else
+                        {
+                            ConnectionData d = new ConnectionData(IPAddress.Parse(arguments[0]), Convert.ToInt32(arguments[1]));
+                            Connect(d.IP, d.Port);
+                        }
                     });
                     break;
 
@@ -152,7 +161,10 @@ namespace JarvisClientFramework
                     break;
 
                 case "TerminatingPhrase":
-                    TerminatingPhrase = (string)e.Packet.Data;
+                    if (arguments.Count < 1)
+                        SendMessage("Post", new List<string>() { "Usage is: TerminatingPhrase {New Phrase}" });
+                    else
+                        TerminatingPhrase = arguments[0];
                     break;
             }
         }

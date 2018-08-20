@@ -66,8 +66,13 @@ namespace JarvisClient
                     Toast.MakeText(this, "Message Transmitting!", ToastLength.Short).Show();
                     e.Handled = true;
 
-                    ClientServer.SendMessage("Post", new ConsolePostEventArgs("Command: " + CommandBar.Text), ConsoleClient.ID);   // Updates the console
-                    ClientServer.SendMessage(CommandBar.Text);   // Sends the command
+                    ClientServer.SendMessage("Post", new List<string>() { "Command: " + CommandBar.Text }, ConsoleClient.ID);   // Updates the console
+
+                    List<string> arguments = CommandSyntaxInterpreter.ParseMessageBySpace(CommandBar.Text); // Finds the arguments based on the location of spaces
+                    string command = arguments[0];                                                          // Extracts the actual command
+                    arguments.RemoveAt(0);                                                                  // Removes the command from the list of arguments
+
+                    ClientServer.SendMessage(command, arguments);                                           // Sends the command
                     CommandBar.Text = "";
                 }
             };
@@ -78,9 +83,15 @@ namespace JarvisClient
             RunOnUiThread(() =>
             {
                 if (e.Append)
-                    consoleOutput.Append(e.Message + ((e.Newline) ? "\n" : ""));
+                    if(e.Newline)
+                        consoleOutput.Append(e.Message + "\n");
+                    else
+                        consoleOutput.Append(e.Message);
                 else
-                    consoleOutput.Text = e.Message + ((e.Newline) ? "\n" : "");
+                    if(e.Newline)
+                        consoleOutput.Text = e.Message + "\n";
+                    else
+                        consoleOutput.Text = e.Message;
             });
         }
 
