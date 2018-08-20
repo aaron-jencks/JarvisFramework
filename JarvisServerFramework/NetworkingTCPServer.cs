@@ -47,13 +47,32 @@ namespace JarvisServerFramework
         /// </summary>
         protected List<ServerClient> tcpClients { get; set; } = new List<ServerClient>(10);
 
+        /// <summary>
+        /// A thread for the TxManager
+        /// </summary>
+        protected Thread TxMessageThread { get; set; }
+
+        /// <summary>
+        /// A thread for the ConnectionManager
+        /// </summary>
+        protected Thread ConnectionManagerThread { get; set; }
+
+        /// <summary>
+        /// A queue to hold messages until the TxManager can get around to sending them.
+        /// </summary>
+        protected Queue<TcpTxMessage> TcpTxQueue { get; set; } = new Queue<TcpTxMessage>(10);
+
         #endregion
 
         #region Constructor
 
         public NetworkingTCPServer(ref Queue<CommPacket> CommQueue):base(ref CommQueue)
         {
+            TxMessageThread = new Thread(TxManager);
+            TxMessageThread.Start();
 
+            ConnectionManagerThread = new Thread(ConnectionManager);
+            ConnectionManagerThread.Start();
         }
 
         #endregion
@@ -135,10 +154,30 @@ namespace JarvisServerFramework
             tcpClients.RemoveAt(index);
         }
 
-        // START HERE!!!
+        /// <summary>
+        /// Allows queueing of messages to be sent out to the client list
+        /// </summary>
+        /// <param name="message">message to send</param>
+        /// <param name="ID">target client to send to, default is global (-1)</param>
         public virtual void SendMessage(string message, int ID = -1)
         {
+            TcpTxQueue.Enqueue(new TcpTxMessage(message, ID));
+        }
 
+        public override void Dispose()
+        {
+            base.Dispose();                                                 // Handles stopping the base module
+
+            if(isServerRunning)                                             // Stops Server
+                ServerStop();
+
+            while (TxMessageThread.IsAlive || CommManagerThread.IsAlive) ;  // Waits for the connection and tx managers to exit
+        }
+
+        // START HERE!!!
+        protected override void Module_MessageRxEvent(object sender, MessageRxEventArgs e)
+        {
+            base.Module_MessageRxEvent(sender, e);
         }
 
         #endregion
@@ -188,6 +227,35 @@ namespace JarvisServerFramework
                     if (!AwaitClientTask.IsCanceled)
                         AwaitClientTaskCancellationSource.Cancel();
                 }
+
+                Thread.Sleep(100);  // Frees up processor space
+            }
+        }
+
+        /// <summary>
+        /// Handles sending messages via TCP to the clients
+        /// </summary>
+        protected virtual void TxManager()
+        {
+            while(!isStopping)
+            {
+                if(isServerRunning && TcpTxQueue.Count > 0)
+                {
+                    for(int i = 0; i < TcpTxQueue.Count; i++)
+                    {
+                        TcpTxMessage m = TcpTxQueue.Dequeue();
+
+                        byte[] msg = Encoding.ASCII.GetBytes(m.Message);
+
+                        foreach(ServerClient client in tcpClients)
+                        {
+                            if ((m.TargetID != -1 && client.ID == m.TargetID)||m.TargetID == -1)
+                                client.Stream.Write(msg, 0, msg.Length);
+                        }
+                    }
+                }
+
+                Thread.Sleep(100); // Frees up processor space
             }
         }
 

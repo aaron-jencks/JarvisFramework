@@ -132,4 +132,16 @@ namespace JarvisServerFramework
             Status = status;
         }
     }
+
+    public class TcpTxMessage
+    {
+        public string Message { get; set; }
+        public int TargetID { get; set; }
+
+        public TcpTxMessage(string message, int targetID = -1)
+        {
+            Message = message;
+            TargetID = targetID;
+        }
+    }
 }
