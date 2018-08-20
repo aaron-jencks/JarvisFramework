@@ -50,7 +50,7 @@ namespace JarvisServerFramework
         {
             Halt();
             Stream.Dispose();
-            Client.Dispose();
+            Client.Close();
         }
 
         public virtual void Halt()
