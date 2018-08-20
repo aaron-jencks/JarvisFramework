@@ -127,8 +127,16 @@ namespace JarvisServerFramework
         /// <summary>
         /// Allows peaceful stop of a client's connection from the server
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name="ID">ID of the client to remove</param>
         public virtual void ClientDisconnect(int ID)
+        {
+            int index = tcpClients.FindIndex(new Predicate<ServerClient>((ServerClient s) => { return s.ID == ID; }));
+            tcpClients[index].Dispose();
+            tcpClients.RemoveAt(index);
+        }
+
+        // START HERE!!!
+        public virtual void SendMessage(string message, int ID = -1)
         {
 
         }
