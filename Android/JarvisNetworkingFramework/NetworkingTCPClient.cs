@@ -80,6 +80,7 @@ namespace JarvisClientFramework
                 Client = new TcpClient();
                 IP = ip;
                 Port = port;
+                SendMessage(new CommPacket("Post", ID, new List<string>() { "Connecting..." }));
                 Client.Connect(ip, port);
                 isConnected = Client.Connected;
                 Task.Factory.StartNew(() => { OnConnectionChangeEvent(); });

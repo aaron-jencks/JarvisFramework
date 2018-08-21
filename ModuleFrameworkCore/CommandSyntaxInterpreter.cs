@@ -1,17 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using ModuleFramework;
-
-namespace JarvisClientFramework
+namespace ModuleFramework
 {
     public class CommandSyntaxInterpreter
     {
@@ -25,7 +16,7 @@ namespace JarvisClientFramework
         {
             List<string> temp = new List<string>(10);
             int index = 0;
-            while(message.Contains(" "))
+            while (message.Contains(" "))
             {
                 index = message.IndexOf(' ');
                 if (message.StartsWith("\""))
@@ -40,7 +31,7 @@ namespace JarvisClientFramework
                     message = message.Remove(0, ++index);
                 }
             }
-            if(message != "")
+            if (message != "")
                 temp.Add(message);  // Add any remaining, since there is no space at the end
             return temp;
         }

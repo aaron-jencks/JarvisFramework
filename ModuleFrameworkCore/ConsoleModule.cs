@@ -1,24 +1,15 @@
-﻿using System;
+﻿using ModuleFramework;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using JarvisClientFramework;
-using ModuleFramework;
 using System.Threading.Tasks;
 
-namespace JarvisClientFramework
+namespace ModuleFramework
 {
     public class ConsoleModule : Module
-    { 
+    {
 
-        public ConsoleModule(ref Queue<CommPacket> commQueue):base(ref commQueue)
+        public ConsoleModule(ref Queue<CommPacket> commQueue) : base(ref commQueue)
         {
 
         }
@@ -27,10 +18,10 @@ namespace JarvisClientFramework
         {
             base.Module_MessageRxEvent(sender, e);
             List<string> arguments = (List<string>)e.Packet.Data;
-            switch(e.Packet.Command)
+            switch (e.Packet.Command)
             {
                 case "Post":
-                    /*Task.Factory.StartNew(() =>
+                    Task.Factory.StartNew(() =>
                     {
                         if (arguments.Count < 1)
                             SendMessage("Post", "Usage is: Post {Message} {Append?} {Newline?}");
@@ -45,20 +36,7 @@ namespace JarvisClientFramework
                                 d = new ConsolePostEventArgs(arguments[0], Convert.ToBoolean(arguments[1]), Convert.ToBoolean(arguments[2]));
                             OnConsolePostEvent(d);
                         }
-                    });*/
-                    if (arguments.Count < 1)
-                        SendMessage("Post", "Usage is: Post {Message} {Append?} {Newline?}");
-                    else
-                    {
-                        ConsolePostEventArgs d;
-                        if (arguments.Count == 1)
-                            d = new ConsolePostEventArgs(arguments[0]);
-                        else if (arguments.Count == 2)
-                            d = new ConsolePostEventArgs(arguments[0], Convert.ToBoolean(arguments[1]));
-                        else
-                            d = new ConsolePostEventArgs(arguments[0], Convert.ToBoolean(arguments[1]), Convert.ToBoolean(arguments[2]));
-                        OnConsolePostEvent(d);
-                    }
+                    });
                     break;
 
                 case "Clear":

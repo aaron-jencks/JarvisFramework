@@ -45,8 +45,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandSyntaxInterpreter.cs" />
-    <Compile Include="ConsoleModule.cs" />
     <Compile Include="NetworkingTCPClient.cs" />
     <Compile Include="Shared.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />

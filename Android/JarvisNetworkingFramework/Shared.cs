@@ -44,18 +44,4 @@ namespace JarvisClientFramework
             this.Port = Port;
         }
     }
-
-    public class ConsolePostEventArgs : EventArgs
-    {
-        public bool Append { get; set; }
-        public bool Newline { get; set; }
-        public string Message { get; set; }
-
-        public ConsolePostEventArgs(string message, bool append = true, bool newline = true)
-        {
-            Message = message;
-            Append = append;
-            Newline = newline;
-        }
-    }
 }

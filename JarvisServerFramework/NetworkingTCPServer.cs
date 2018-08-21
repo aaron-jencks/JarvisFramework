@@ -113,6 +113,18 @@ namespace JarvisServerFramework
         }
 
         /// <summary>
+        /// Starts the server finding the next available port and the current local address
+        /// </summary>
+        public virtual void ServerStart()
+        {
+            TcpListener l = new TcpListener(IPAddress.Loopback, 0);
+            l.Start();
+            int port = ((IPEndPoint)l.LocalEndpoint).Port;
+            l.Stop();
+            ServerStart(port);
+        }
+
+        /// <summary>
         /// Stops the server
         /// </summary>
         public virtual void ServerStop()
@@ -159,7 +171,7 @@ namespace JarvisServerFramework
         /// </summary>
         /// <param name="message">message to send</param>
         /// <param name="ID">target client to send to, default is global (-1)</param>
-        public virtual void SendMessage(string message, int ID = -1)
+        public virtual void SendTcpMessage(string message, int ID = -1)
         {
             TcpTxQueue.Enqueue(new TcpTxMessage(message, ID));
         }
@@ -174,10 +186,41 @@ namespace JarvisServerFramework
             while (TxMessageThread.IsAlive || CommManagerThread.IsAlive) ;  // Waits for the connection and tx managers to exit
         }
 
-        // START HERE!!!
         protected override void Module_MessageRxEvent(object sender, MessageRxEventArgs e)
         {
             base.Module_MessageRxEvent(sender, e);
+
+            List<string> arguments = (List<string>)e.Packet.Data;
+
+            switch(e.Packet.Command)
+            {
+                case "Start":
+                    if (arguments.Count < 1)
+                        ServerStart();
+                    else if (arguments.Count == 1)
+                        ServerStart(Convert.ToInt32(arguments[0]));
+                    else
+                        ServerStart(IPAddress.Parse(arguments[0]), Convert.ToInt32(arguments[1]));
+                    break;
+
+                case "Stop":
+                    ServerStop();
+                    break;
+
+                case "Restart":
+                    ServerStop();
+                    ServerStart(IP, Port);
+                    break;
+
+                case "Broadcast":
+                    if (arguments.Count < 1)
+                        SendMessage("Post", new List<string>() { "Usage is Broadcast <string message> or Broadcast <string message> <int ID>" });
+                    else if (arguments.Count == 1)
+                        SendTcpMessage(arguments[0]);
+                    else
+                        SendTcpMessage(arguments[0], Convert.ToInt32(arguments[1]));
+                    break;
+            }
         }
 
         #endregion
@@ -191,7 +234,7 @@ namespace JarvisServerFramework
         {
             while(!isStopping)
             {
-                if(isServerRunning && AwaitClientTask.IsCompleted)
+                if(isServerRunning && (AwaitClientTask == null || AwaitClientTask.IsCompleted))
                 {
                     AwaitClientTaskCancellationSource = new CancellationTokenSource();
                     AwaitClientTaskCancellationToken = AwaitClientTaskCancellationSource.Token;
@@ -224,7 +267,7 @@ namespace JarvisServerFramework
                 }
                 else if(!isServerRunning)
                 {
-                    if (!AwaitClientTask.IsCanceled)
+                    if (AwaitClientTask != null && !AwaitClientTask.IsCanceled)
                         AwaitClientTaskCancellationSource.Cancel();
                 }
 
@@ -309,7 +352,8 @@ namespace JarvisServerFramework
         /// <param name="message"></param>
         private void ServerClient_MessageRxEvent(object sender, string message)
         {
-            throw new NotImplementedException();
+            List<string> arguments = CommandSyntaxInterpreter.ParseMessageBySpace(message);
+            SendMessage(message, arguments);
         }
 
         #endregion
